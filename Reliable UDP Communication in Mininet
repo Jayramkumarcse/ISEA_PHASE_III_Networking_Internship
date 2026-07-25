@@ -1,0 +1,114 @@
+# 01 — Reliable UDP Communication in Mininet
+
+## Objective
+Build a UDP client-server application in Mininet and add basic reliability
+using sequence numbers, ACKs, timeout, and retransmission (Stop-and-Wait),
+then evaluate behaviour under 0%, 5%, and 10% simulated packet loss.
+
+## Topology
+```
+h1 ---- s1 ---- h2      h1 = Server (10.0.0.1)      h2 = Client (10.0.0.2)
+```
+
+## Packet Formats
+| Direction | Format | Example |
+|---|---|---|
+| Client -> Server | `SEQ\|MESSAGE` | `3\|Message 3 from h2` |
+| Server -> Client | `ACK\|SEQ` | `ACK\|3` |
+
+## Timeout Rule (derived from roll number's last digit)
+| Last digit | Timeout |
+|---|---|
+| 0-1 | 0.5 s |
+| 2-3 | 0.7 s |
+| 4-5 | 1.0 s |
+| 6-7 | 1.2 s |
+| 8-9 | 1.5 s |
+
+`client.py` computes this automatically from `--roll` — no manual editing needed.
+
+## Files
+```
+01-reliable-udp/
+├── server.py
+├── client.py
+├── result_table.csv        (generated — 3 rows, one per loss condition)
+├── screenshots/
+│   ├── nodes.png
+│   ├── net.png
+│   ├── pingall.png
+│   ├── server_output.png
+│   └── client_output.png
+└── report.pdf               (2-3 pages — see brief for required sections)
+```
+
+## How to Run (inside Mininet)
+
+1. Start Mininet with the required loss condition (repeat for 0, 5, 10):
+   ```bash
+   sudo mn --link tc,bw=5,delay=30ms,loss=0
+   ```
+2. Verify the topology:
+   ```
+   mininet> nodes
+   mininet> net
+   mininet> pingall
+   ```
+   (screenshot each of these three commands)
+3. Start the server on h1:
+   ```
+   mininet> h1 python3 server.py --port 5000 --expected 10 &
+   ```
+4. Run the client on h2, passing your own roll number/name and the loss
+   percent that matches the `sudo mn` command you started with:
+   ```
+   mininet> h2 python3 client.py --server 10.0.0.1 --port 5000 \
+                                  --roll <YOUR_ROLL_NO> --name "<YOUR NAME>" \
+                                  --loss 0 --csv result_table.csv
+   ```
+5. Repeat steps 1–4 for `loss=5` and `loss=10`. `client.py` appends a new
+   row to `result_table.csv` each run, so after three runs the file has
+   exactly the 3 required data rows.
+6. Screenshot the server and client terminal output for each run
+   (`server_output.png`, `client_output.png`).
+
+## Expected Output
+
+**Client**
+```
+TOTAL_MESSAGES=10
+LOSS_PERCENT=<0|5|10>
+TIMEOUT=<derived from roll number>
+TOTAL_PACKETS_SENT=<>=10>
+TOTAL_RETRANSMISSIONS=<>=0>
+TRANSFER_TIME_SECONDS=<measured>
+STATUS=SUCCESS
+```
+
+**Server**
+```
+TOTAL_UNIQUE_MESSAGES_RECEIVED=10
+TOTAL_DUPLICATES_DETECTED=<>=0>
+STATUS=SUCCESS
+```
+
+## result_table.csv columns (do not rename)
+```
+roll_no,name,loss_percent,timeout,total_messages,total_packets_sent,total_retransmissions,transfer_time_seconds,status
+```
+
+## Reflection Questions (answer in report.pdf)
+1. Why is ACK needed?
+2. Why is timeout needed?
+3. Why can duplicate messages occur?
+4. What happens when packet loss increases?
+5. How is this method similar to TCP?
+6. How is it different from TCP?
+
+## Notes
+- Must be run inside Mininet, not a plain terminal.
+- `client.py` records the `--loss` value you pass in for the CSV; it does
+  not measure loss itself — that's enforced by Mininet's `tc` link
+  emulation, which is why the same code is re-run once per condition.
+- Delete `server_output.log`-style scratch files before zipping/committing;
+  only the five required screenshots and the CSV/report should ship.
