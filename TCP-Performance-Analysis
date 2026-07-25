@@ -1,0 +1,720 @@
+# TCP Connection Performance Analysis Using Mininet and Wireshark
+
+## ISEA Phase III Networking Internship
+
+---
+
+# 1. Project Overview
+
+
+This project analyzes TCP connection performance using Mininet and Wireshark.
+
+The objective is to compare two TCP communication approaches:
+
+
+1. Persistent TCP Connection
+
+2. New TCP Connection Per Message
+
+
+
+The performance comparison is performed using:
+
+- Response Time
+- Throughput
+- TCP Handshake Analysis
+- Packet Level Observation
+
+The experiment is implemented using:
+
+- Python TCP Socket Programming
+- Mininet Network Emulator
+- Wireshark Packet Analyzer
+
+---
+
+# 2. Problem Statement
+
+
+TCP provides reliable communication using:
+
+- Connection establishment
+- Sequence numbers
+- Acknowledgements
+- Error recovery
+
+
+However, maintaining a connection or creating a new connection for every message affects performance.
+
+
+This project evaluates:
+
+"Which TCP communication approach provides better performance under different message sizes?"
+
+---
+
+# 3. Objectives
+
+
+The objectives are:
+
+
+1. Implement TCP client-server communication.
+
+2. Implement persistent TCP connection mode.
+
+3. Implement new connection per message mode.
+
+4. Measure response time.
+
+5. Calculate throughput.
+
+6. Analyze TCP handshake overhead.
+
+7. Capture TCP packets using Wireshark.
+
+8. Compare performance.
+
+---
+
+# 4. Technologies Used
+
+
+Programming Language Python 3
+Protocol TCP
+Network Emulator Mininet
+Packet Analyzer|Wireshark
+Operating System Ubuntu Linux
+
+---
+
+# 5. System Architecture
+
+             Mininet Network
+
+
+      +----------------+
+
+      |      h2        |
+
+      | TCP Client     |
+
+      +----------------+
+
+              |
+
+              |
+
+          TCP Connection
+
+              |
+
+              |
+
+      +----------------+
+
+      |      h1        |
+
+      | TCP Server     |
+
+      +----------------+
+
+
+Server: 10.0.0.1:5000 
+
+Client: 10.0.0.2
+
+---
+
+# 6. TCP Communication Modes
+
+
+## Mode 1: Persistent Connection
+
+
+In persistent mode:
+
+The TCP connection is created only once.
+
+
+Workflow: TCP Three Way Handshake 
+Send Message 1
+
+Receive ACK
+
+Send Message 2
+
+Receive ACK
+
+.....
+
+Send Message 10
+
+Receive ACK
+
+
+
+Advantages:
+
+
+- Less overhead
+- Faster communication
+- Suitable for continuous communication
+
+
+Examples:
+
+- Chat applications
+- File transfer
+- Streaming applications
+
+
+---
+
+# Mode 2: New Connection Per Message
+
+
+In this mode:
+
+A new TCP connection is created for every message.
+
+
+Workflow:
+Handshake
+
+ |
+
+Send Message
+
+ |
+
+Receive ACK
+
+ |
+
+Close Connection
+
+Repeat 10 times
+
+
+Advantages:
+
+- Simple implementation
+- Suitable for short communication
+
+
+Disadvantages:
+
+- More handshake overhead
+- Higher delay
+
+
+
+Examples:
+
+- Short API requests
+- One-time services
+
+
+
+---
+
+# 7. Message Format
+
+
+Client sends: MSG_ID|MESSAGE_SIZE|MESSAGE_DATA
+
+
+
+Example: 3|512|AAAAAAAAAAAA
+
+
+Server replies: ACK|MSG_ID|RECEIVED_SIZE
+
+
+Example: ACK|3|512
+
+---
+
+# 8. Experimental Setup
+
+
+
+## Mininet Topology
+
+
+
+h1 -------- s1 -------- h2
+
+h1 = TCP Server
+
+h2 = TCP Client
+
+
+Network Parameters:
+
+
+Bandwidth = 5 Mbps
+
+Delay = 50 ms
+
+Message Sizes:
+
+128 bytes
+
+512 bytes
+
+1024 bytes
+
+---
+
+# 9. Experiment Design
+
+
+Total Experiments: Modes: 2
+
+Message Sizes: 3
+
+Messages: 10
+
+Total: 2 × 3 × 10 = 60 messages
+
+
+Experiments:
+
+|Mode|Size|
+|-|-|
+|Persistent|128 bytes|
+|Persistent|512 bytes|
+|Persistent|1024 bytes|
+|New Connection|128 bytes|
+|New Connection|512 bytes|
+|New Connection|1024 bytes|
+
+---
+
+# 10. Python Implementation
+
+
+Project Files:
+
+src/
+
+├── tcp_server.py
+
+├── tcp_client.py
+
+└── mininet_topology.py
+
+
+---
+
+# 11. tcp_server.py Explanation
+
+
+## Purpose
+
+The server:
+
+- Creates TCP socket
+- Listens for connections
+- Accepts clients
+- Receives messages
+- Sends ACK
+- Generates logs
+
+
+
+---
+
+## Important Functions
+
+### socket()
+
+Creates TCP socket.
+
+
+Example:
+
+
+```python
+socket.socket(
+socket.AF_INET,
+socket.SOCK_STREAM
+)
+
+SOCK_STREAM is used because TCP is connection oriented.
+
+bind()
+
+Assigns:
+
+IP Address
+
+Port Number
+
+Example:
+
+server.bind(
+("10.0.0.1",5000)
+)
+listen()
+
+Places server into waiting state.
+
+accept()
+
+Accepts client connection.
+
+send()
+
+Sends acknowledgement.
+
+recv()
+
+Receives client data.
+
+12. tcp_client.py Explanation
+Purpose
+
+Client performs:
+
+TCP connection
+Message generation
+Data transmission
+ACK reception
+Response measurement
+Persistent Mode Implementation
+
+Logic:
+
+Connect()
+
+for message in messages:
+
+       send()
+
+       receive ACK
+
+
+close()
+
+New Connection Mode Implementation
+
+Logic:
+
+for message in messages:
+
+
+       Connect()
+
+
+       send()
+
+
+       receive ACK
+
+
+       close()
+
+13. Performance Measurement
+Response Time
+
+Formula:
+
+Response Time = ACK Receive Time - Send Time
+
+
+For every message:
+
+Start Timer
+
+Send Message
+
+Receive ACK
+
+Stop Timer
+
+Average Response Time
+Average Response Time =
+
+Total Response Time / Number of Messages
+
+Throughput
+Throughput =
+
+Total Bytes Sent / Total Time
+
+
+Unit:
+
+Bytes per Second (B/s)
+
+14. Result Files
+result_table.csv
+
+Contains:
+
+roll_no
+
+name
+
+mode
+
+bandwidth
+
+delay
+
+message_size
+
+total_messages
+
+average_response_time
+
+throughput
+
+status
+
+
+Example:
+
+NDU202500361,JAYRAM,persistent,5,50,512,10,0.02,25000,SUCCESS
+message_response_log.csv
+
+Contains every message timing:
+
+roll_no
+
+name
+
+mode
+
+message_size
+
+message_number
+
+response_time
+
+
+Total:
+
+60 records
+
+15. Wireshark Analysis
+
+Wireshark Filter:
+
+tcp.port == 5000
+
+Observed:
+
+TCP Three Way Handshake
+
+Packets:
+
+SYN
+
+SYN + ACK
+
+ACK
+
+Data Transfer
+
+Observed:
+
+TCP Data Packet
+
+ACK Packet
+
+Connection Termination
+
+Packets:
+
+FIN
+
+ACK
+
+16. Graph Analysis
+Graph 1
+
+File:
+
+mode_vs_response_time.png
+
+Purpose:
+
+Compare:
+
+Persistent
+
+VS
+
+New Connection
+
+Graph 2
+
+File:
+
+message_size_vs_throughput.png
+
+Purpose:
+
+Analyze effect of message size on throughput.
+
+Graph 3
+
+File:
+
+message_response_time.png
+
+Purpose:
+
+Compare response variation for 512 byte messages.
+
+17. How to Run
+Start Mininet
+sudo mn --link tc,bw=5,delay=50ms
+
+Verify:
+
+nodes
+
+net
+
+pingall
+
+Open terminals:
+
+xterm h1 h2
+
+Server:
+
+python3 tcp_server.py
+
+Client:
+
+python3 tcp_client.py
+
+Select mode:
+
+1. Persistent
+
+2. New Connection
+
+18. Results and Observation
+
+Expected Observation:
+
+Persistent Mode
+Lower response time
+Higher throughput
+Less overhead
+
+Reason:
+
+TCP handshake occurs only once.
+
+New Connection Mode
+Higher response time
+Lower throughput
+
+Reason:
+
+Every message requires:
+
+SYN
+SYN ACK
+ACK
+FIN
+19. Real World Applications
+Persistent TCP
+
+Used in:
+
+Web browsing
+Chat applications
+Video streaming
+File transfer
+New Connection TCP
+
+Used in:
+
+Simple request-response systems
+Short transactions
+20. Conclusion
+
+The experiment successfully analyzed TCP performance using Mininet and Wireshark.
+
+Persistent TCP communication provides better performance because it reduces connection establishment overhead.
+
+New connection mode provides simplicity but increases latency.
+
+The experiment demonstrates the importance of connection management in network performance.
+
+
+---
+
+# Python Repository Files
+
+## `tcp_server.py`
+
+Main responsibilities:
+
+```text
+1. Create TCP Socket
+
+2. Bind IP and Port
+
+3. Listen for Clients
+
+4. Accept Connection
+
+5. Receive Data
+
+6. Send ACK
+
+7. Save Logs
+
+8. Close Connection
+tcp_client.py
+
+Main responsibilities:
+
+1. Generate Messages
+
+2. Select Communication Mode
+
+3. Measure Response Time
+
+4. Receive ACK
+
+5. Calculate Statistics
+
+6. Save Results
+mininet_topology.py
+
+Purpose:
+
+Creates:
+
+h1 ---- s1 ---- h2
+
+and applies:
+
+Bandwidth = 5 Mbps
+
+Delay = 50 ms
+Assignment-2 GitHub Short Description
+TCP Performance Analysis project implemented using Python TCP sockets, Mininet and Wireshark.
+
+Features:
+- Persistent TCP Connection
+- New TCP Connection Mode
+- Response Time Measurement
+- Throughput Analysis
+- TCP Packet Capture
+
+Environment:
+Python 3 + Ubuntu + Mininet + Wireshark
+
+
